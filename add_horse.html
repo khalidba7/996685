@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إضافة خيل - مزاد الزمرد</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { text-align: center; color: #006400; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: 12px; background: #006400; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #004d00; }
+</style>
+</head>
+<body>
+
+<h1>إضافة خيل جديد</h1>
+
+<input type="text" id="name" placeholder="اسم الخيل">
+<input type="number" id="age" placeholder="العمر">
+<input type="text" id="status" placeholder="الحالة">
+<textarea id="details" placeholder="تفاصيل إضافية عن الخيل"></textarea>
+
+<label>اختر 3 صور أساسية للخيل:</label>
+<input type="file" id="mainImages" multiple accept="image/*">
+
+<label>صورة الجواز (اختياري):</label>
+<input type="file" id="passportImage" accept="image/*">
+
+<button onclick="addHorse()">إضافة الخيل</button>
+
+<script type="module">
+import { app } from './firebase.js';
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+window.addHorse = async function() {
+    const name = document.getElementById("name").value.trim();
+    const age = document.getElementById("age").value.trim();
+    const status = document.getElementById("status").value.trim();
+    const details = document.getElementById("details").value.trim();
+    const mainImages = document.getElementById("mainImages").files;
+    const passportImage = document.getElementById("passportImage").files[0];
+
+    if (!name || !age || !status || !details || mainImages.length < 3) {
+        alert("⚠ يرجى تعبئة جميع الحقول واختيار 3 صور أساسية على الأقل");
+        return;
+    }
+
+    // رفع الصور الأساسية
+    let imagesURLs = [];
+    for (let i = 0; i < mainImages.length; i++) {
+        const imgRef = ref(storage, horses/${Date.now()}_${mainImages[i].name});
+        await uploadBytes(imgRef, mainImages[i]);
+        const url = await getDownloadURL(imgRef);
+        imagesURLs.push(url);
+    }
+
+    // رفع صورة الجواز إذا موجودة
+    let passportURL = "";
+    if (passportImage) {
+        const passRef = ref(storage, passports/${Date.now()}_${passportImage.name});
+        await uploadBytes(passRef, passportImage);
+        passportURL = await getDownloadURL(passRef);
+    }
+
+    // حفظ بيانات الخيل في Firestore
+    await addDoc(collection(db, "horses"), {
+        name: name,
+        age: age,
+        status: status,
+        details: details,
+        images: imagesURLs,
+        passport: passportURL,
+        createdAt: new Date().toISOString(),
+        currentBid: 0,
+        lastBidder: "",
+        lastBidderPhone: ""
+    });
+
+    alert("✅ تم إضافة الخيل بنجاح");
+    window.location.href = "auction.html";
+}
+</script>
+
+</body>
+</html> 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الصفحة الرئيسية - مزاد الزمرد</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; text-align: center; padding: 30px; }
+    h1 { color: #006400; }
+    button { display: block; width: 80%; max-width: 300px; margin: 15px auto; padding: 15px; font-size: 18px; background: #006400; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #004d00; }
+</style>
+</head>
+<body>
+
+<h1>مرحباً بك في مزاد الزمرد</h1>
+
+<button onclick="goToAuction()">🎯 دخول المزاد</button>
+<button onclick="addHorse()">➕ إضافة خيل</button>
+<button onclick="developerLogin()">🔑 دخول المطور</button>
+
+<script>
+function goToAuction() {
+    window.location.href = "auction.html";
+}
+
+function addHorse() {
+    window.location.href = "add_horse.html";
+}
+
+function developerLogin() {
+    let pass = prompt("أدخل كلمة السر للمطور:");
+    if (pass === "Khalid9966") {
+        window.location.href = "admin.html";
+    } else {
+        alert("❌ كلمة السر غير صحيحة");
+    }
+}
+</script>
+
+</body>
+</html> 

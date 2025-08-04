@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المزاد - مزاد الزمرد</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { text-align: center; color: #006400; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 6px; }
+    .bid-box { margin-top: 10px; display: flex; gap: 5px; }
+    .bid-box input { flex: 1; padding: 8px; }
+    .bid-box button { padding: 8px; background: #006400; color: white; border: none; cursor: pointer; }
+    .images-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+    .images-popup img { max-width: 90%; max-height: 80%; }
+    .images-popup button { position: absolute; top: 20px; right: 20px; padding: 10px; background: red; color: white; border: none; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>مزاد الزمرد</h1>
+<div class="grid" id="horsesList"></div>
+
+<!-- نافذة عرض الصور -->
+<div class="images-popup" id="imagesPopup">
+    <button onclick="closePopup()">إغلاق</button>
+    <img id="popupImage" src="">
+</div>
+
+<script type="module">
+import { app } from './firebase.js';
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const db = getFirestore(app);
+const horsesList = document.getElementById("horsesList");
+
+async function loadHorses() {
+    const querySnapshot = await getDocs(collection(db, "horses"));
+    horsesList.innerHTML = "";
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <img src="${data.mainImage}" alt="صورة الخيل">
+            <h3>${data.name}</h3>
+            <p>العمر: ${data.age}</p>
+            <p>الحالة: ${data.status}</p>
+            <p>آخر مزايد: ${data.lastBidder || 'لا يوجد'} - ${data.lastBidderPhone || ''}</p>
+            <div class="bid-box">
+                <input type="number" id="bid-${docSnap.id}" placeholder="أدخل مبلغ المزايدة">
+                <button onclick="placeBid('${docSnap.id}')">زايد</button>
+            </div>
+            <button onclick="showImages(${JSON.stringify(data.images)})">عرض باقي الصور</button>
+        `;
+        horsesList.appendChild(card);
+    });
+}
+loadHorses();
+
+window.placeBid = async function(horseId) {
+    const bidInput = document.getElementById(bid-${horseId});
+    const bidAmount = bidInput.value.trim();
+    const userName = localStorage.getItem("userName");
+    const phone = localStorage.getItem("phone");
+
+    if (!bidAmount) {
+        alert("⚠ أدخل مبلغ المزايدة");
+        return;
+    }
+
+    await updateDoc(doc(db, "horses", horseId), {
+        currentBid: bidAmount,
+        lastBidder: userName,
+        lastBidderPhone: phone
+    });
+
+    alert("✅ تم تسجيل المزايدة");
+    loadHorses();
+}
+
+window.showImages = function(images) {
+    const popup = document.getElementById("imagesPopup");
+    const popupImage = document.getElementById("popupImage");
+    let currentIndex = 0;
+
+    function updateImage() {
+        popupImage.src = images[currentIndex];
+    }
+    updateImage();
+
+    popup.style.display = "flex";
+
+    popup.onclick = function(e) {
+        if (e.target === popupImage) {
+            currentIndex = (currentIndex + 1) % images.length;
+            updateImage();
+        }
+    }
+}
+
+window.closePopup = function() {
+    document.getElementById("imagesPopup").style.display = "none";
+}
+</script>
+
+</body>
+</html> 
